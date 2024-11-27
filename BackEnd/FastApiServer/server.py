@@ -9,11 +9,6 @@ import scheduler
 
 app = FastAPI()
 
-# # Spark 세션 초기화
-# spark = SparkSession.builder \
-#     .appName("FastAPI-Spark Integration") \
-#     .getOrCreate()
-
 class Item(BaseModel):
     data: str
 
@@ -47,56 +42,7 @@ async def receive_data(request: Request):
     print("Received data:", data)
     return {"message": "Data received successfully", "receivedData": data}
 
-@app.get("/recommend-test")
-async def recommend_commercial_areas():
-    # Spark 세션 생성
-    spark = start_recommend_spark()
-
-    try:
-        # DataFrame으로 HDFS 파일 읽기
-        df = spark.read.csv("hdfs://master1:9000/data/commercial_data.csv", header=True, inferSchema=True)
-
-        # 데이터 출력
-        df.show()
-        return {"status": "success", "data": df.collect()}
-    except Exception as e:
-        print(f"Error occurred: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        # Spark 세션 종료
-        spark.stop()
-
-@app.get("/test-spark-connection")
-async def test_spark_connection():
-    try:
-        # Spark 세션 생성
-        spark = start_recommend_spark()
-
-        # 간단한 DataFrame 생성
-        data = [("Alice", 34), ("Bob", 45), ("Cathy", 29)]
-        columns = ["Name", "Age"]
-        df = spark.createDataFrame(data, columns)
-
-        # DataFrame 출력
-        df.show()
-
-        return {"status": "success", "message": "Spark session created and DataFrame displayed successfully"}
-    except Exception as e:
-        # 에러 로그
-        print(f"Error occurred: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        # Spark 세션 종료
-        spark.stop()
-
 def start_recommend_spark():
-    # spark = SparkSession.builder \
-    #     .appName("FastAPI-Spark Integration") \
-    #     .master("spark://master1:7077") \
-    #     .config("spark.pyspark.python", "/opt/venv/bin/python") \
-    #     .config("spark.pyspark.driver.python", "/opt/venv/bin/python") \
-    #     .config("spark.submit.pyFiles", "spark_reco.py") \
-    #     .getOrCreate()
     spark = SparkSession.builder \
         .appName("FastAPI-Spark Integration") \
         .getOrCreate()
